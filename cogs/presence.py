@@ -18,7 +18,7 @@ class BotPresence:
     def idle() -> Activity:
         """Shown when the queue is empty, and nothing is playing."""
         return Activity(
-            name=f'Nothing! Use `{cfg.COMMAND_PREFIX}play` to start',
+            name=f'Nothing! Use `/play` to start',
             type=ActivityType.listening,
             state='Queue is empty.'
             )

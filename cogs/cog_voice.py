@@ -241,10 +241,10 @@ class Voice(commands.Cog):
         else:
             log.debug('No channel to leave.')
 
-    @commands.command(aliases=command_aliases('queue'))
+    @commands.hybrid_command(name='queue')
     @commands.check(is_command_enabled)
     async def queue(self, ctx: commands.Context, page: int=1):
-        """Displays the current queue, up to 10 items per page."""
+        """Display the current queue."""
         if not self.media_queue:
             await ctx.send(embed=CommonMsg.queue_is_empty())
             return
@@ -273,10 +273,10 @@ class Voice(commands.Cog):
             f'Showing {start + 1} to {end} of {len(self.media_queue)} items. Use -queue [page] to see more.'
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=command_aliases('history'))
+    @commands.hybrid_command(name='history')
     @commands.check(is_command_enabled)
     async def history(self, ctx: commands.Context):
-        """Shows recently played tracks, up to the amount set in configuration."""
+        """Show recently played tracks."""
         if not any(item is not None for item in self.play_history):
             await ctx.send(embed=embedq(EmojiStr.cancel + ' Play history is empty.'))
             return
@@ -289,15 +289,11 @@ class Voice(commands.Cog):
 
         await ctx.send(embed=history_embed)
 
-    @commands.command(aliases=command_aliases('move'))
+    @commands.hybrid_command(name='move')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def move(self, ctx: commands.Context, origin: int, destination: int):
-        """Moves the queue item located at `origin` to `destination`.
-
-        @origin: Index of the queue item to be moved.
-        @destination: What spot the item should be moved to.
-        """
+        """Moves the queue item located at `origin` to `destination`."""
         if self.media_queue == []:
             await ctx.send(embed=CommonMsg.queue_is_empty())
             return
@@ -316,11 +312,11 @@ class Voice(commands.Cog):
         await ctx.send(embed=embedq((EmojiStr.arrow_u if direction == 'up' else EmojiStr.arrow_d) + f' Moved #{origin} ({origin_item.info.title}) ' +
             f'{direction} to spot #{destination}.'))
 
-    @commands.command(aliases=command_aliases('shuffle'))
+    @commands.hybrid_command(name='shuffle')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def shuffle(self, ctx: commands.Context):
-        """Shuffles the order of the queue."""
+        """Shuffle the order of the queue."""
         if self.media_queue == []:
             await ctx.send(embed=CommonMsg.queue_is_empty())
             return
@@ -351,11 +347,11 @@ class Voice(commands.Cog):
                 return
         await ctx.send(embed=embedq(f'{EmojiStr.dice} Roulette mode is {'ON' if self.media_queue.roulette_mode else 'OFF'}.'))
 
-    @commands.command(aliases=command_aliases('remove'))
+    @commands.hybrid_command(name='unqueue')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
-    async def remove(self, ctx: commands.Context, n: int):
-        """Removes an item from the queue at the given index."""
+    async def unqueue(self, ctx: commands.Context, n: int):
+        """Remove a song from the queue at the given index."""
         if n >= len(self.media_queue):
             await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)))
             return
@@ -378,11 +374,11 @@ class Voice(commands.Cog):
         else:
             await ctx.send(embed=embedq('Queue is already empty.'))
 
-    @commands.command(aliases=command_aliases('skip'))
+    @commands.hybrid_command(name='skip')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def skip(self, ctx: commands.Context):
-        """Skips the current track. If vote-to-skip is disabled for this bot, it will be skipped immediately."""
+        """Skip the current track."""
         ctx.author = cast(Member, ctx.author)
         vote_requirement_real = cfg.SKIP_VOTES_EXACT if cfg.SKIP_VOTES_TYPE == 'exact' \
             else ceil(len(ctx.author.voice.channel.members) * (cfg.SKIP_VOTES_PERCENTAGE / 100))
@@ -407,67 +403,91 @@ class Voice(commands.Cog):
         else:
             await ctx.send(embed=embedq('Nothing to skip.'))
 
-    @commands.command(aliases=command_aliases('loop'))
+    @commands.hybrid_command(name='loop')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def loop(self, ctx: commands.Context, toggle: str=''):
-        """Toggles looping the current track. If no argument is given, looping will be turned on if its currently off, and vice versa.
-        Alternatively, you can use "loop on" or "loop off" to toggle it explicitly.
-
-        Using `skip` while looping is enabled will skip to the next track in queue, and begin looping that.
-        """
+        """Toggle looping the current track."""
         if toggle in ['on', 'off']:
             self.media_queue.is_looping = {'on': True, 'off': False}[toggle]
             log.info('Looping changed to %s.', self.media_queue.is_looping)
+            await ctx.send(embed=embedq(f'Looping is {"ON" if self.media_queue.is_looping else "OFF"}.'))
         else:
             if toggle == '':
                 self.media_queue.is_looping = not self.media_queue.is_looping
                 log.info('Looping changed to %s.', self.media_queue.is_looping)
+                await ctx.send(embed=embedq(f'Looping is {"ON" if self.media_queue.is_looping else "OFF"}.'))
             else:
                 await ctx.send(embed=embedq(EmojiStr.cancel + ' Invalid option; must be either "on" or "off"'))
                 return
         await ctx.send(embed=embedq(f'Looping is {'ON' if self.media_queue.is_looping else 'OFF'}.'))
 
-    @commands.command(aliases=command_aliases('pause'))
+    @commands.hybrid_command(name='pause')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def pause(self, ctx: commands.Context):
-        """Pauses the player."""
-        if self.voice_client.is_playing():
-            log.info('Pausing audio...')
-            self.voice_client.pause()
-            self.paused_at = time.time()
-        elif self.voice_client.is_paused():
-            await ctx.send(embed=embedq('Already paused. Use `play` to unpause.'))
+        """Pause the music."""
+        if self.voice_client is not None:
+            if self.voice_client.is_playing():
+                log.info('Pausing audio...')
+                self.voice_client.pause()
+                self.paused_at = time.time()
+                await ctx.send(embed=embedq(f'{EmojiStr.pause} Paused.'))
+            elif self.voice_client.is_paused():
+                await ctx.send(embed=embedq('Already paused. Use `play` to unpause.'))
+            else:
+                await ctx.send(embed=embedq('Nothing to pause.'))
         else:
             await ctx.send(embed=embedq('Nothing to pause.'))
 
-    @commands.command(aliases=command_aliases('stop'))
+    @commands.hybrid_command(name='unpause')
+    @commands.check(is_command_enabled)
+    @commands.check(author_in_vc)
+    async def unpause(self, ctx: commands.Context):
+        """Unpause the music."""
+        if self.voice_client is not None:
+            if self.voice_client.is_paused():
+                log.debug('Player is paused; resuming...')
+                self.voice_client.resume()
+                await ctx.send(embed=embedq(f'{EmojiStr.play} Player is resuming.'))
+                self.pause_duration = time.time() - self.paused_at
+            else:
+                await ctx.send(embed=embedq('Player is not paused.'))
+        else:
+            await ctx.send(embed=embedq('Nothing to unpause.'))
+
+    @commands.hybrid_command(name='stop')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
     async def stop(self, ctx: commands.Context): # pylint: disable=unused-argument
-        """Stops the player, and clears the remaining queue."""
-        log.info('Stopping player and clearing the queue...')
-        self.voice_client.stop()
-        self.media_queue.clear()
+        """Stop the music and disconnect."""
+        if self.voice_client.is_connected():
+            log.info('Clearing the queue...')
+            self.media_queue.clear()
+            self.current_item = None
+            self.previous_item = None
+            log.info('Leaving voice channel: %s', self.voice_client.channel.name)
+            await self.voice_client.disconnect()
+            self.voice_client = None
+            await ctx.send(embed=embedq(f'{EmojiStr.stop} Stopped.'))
+        else:
+            log.debug('No channel to leave.')
+            await ctx.send(embed=embedq('Nothing to stop.'))
 
-    @commands.command(aliases=command_aliases('nowplaying'))
+    @commands.hybrid_command(name='nowplaying')
     @commands.check(is_command_enabled)
     async def nowplaying(self, ctx: commands.Context):
-        """Shows what's currently playing, if any exists."""
+        """Show what's currently playing."""
         if self.voice_client.is_playing():
             await ctx.send(embed=self.embed_now_playing())
         else:
             await ctx.send(embed=embedq('Nothing is playing.'))
 
-    @commands.command(aliases=command_aliases('play'))
+    @commands.hybrid_command(name='play')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)
-    async def play(self, ctx: commands.Context, *queries: str):
-        """Adds a link to the queue. Plays immediately if the queue is empty.
-
-        @queries: Can either be a single URL string, a list of URL strings, or a non-URL string for text searching
-        """
+    async def play(self, ctx: commands.Context, queries: str):
+        """Play a song or add one to the queue."""
         log.info('Running "play" command...')
         log.debug('Args: queries=%s', repr(queries))
 
@@ -516,12 +536,17 @@ class Voice(commands.Cog):
         url_strings: list[str] = []
         plain_strings: list[str] = []
 
-        for item in queries:
-            (url_strings if item.startswith('https://') else plain_strings).append(item)
-            if url_strings and plain_strings:
-                log.debug('Both URLs and plain text detected; cancelling.')
-                await ctx.send(f'{EmojiStr.cancel} URLs and plain-text search terms can\'t be used at the same time.')
-                return
+        # for item in queries:
+        #     (url_strings if item.startswith('https://') else plain_strings).append(item)
+        #     if url_strings and plain_strings:
+        #         log.debug('Both URLs and plain text detected; cancelling.')
+        #         await ctx.send(f'{EmojiStr.cancel} URLs and plain-text search terms can\'t be used at the same time.')
+        #         return
+
+        if queries.startswith('https://'):
+            url_strings.append(queries)
+        else:
+            plain_strings.append(queries)
 
         # We now have only queries of either one text search, or one or more URLs
         async with ctx.typing():
@@ -707,8 +732,7 @@ class Voice(commands.Cog):
             else:
                 # No reason to auto-connect for something like -leave, -skip, etc.
                 await ctx.send(embed=embedq('No voice connection found.',
-                    'The bot will automatically connect to a voice channel if one of these commands are used: '+
-                    f'{', '.join(auto_connect_commands)}'))
+                    'The bot will automatically connect to a voice channel when the `/play` command is used.'))
                 raise SilentCancel
 
     #endregion COMMANDS

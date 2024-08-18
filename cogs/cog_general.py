@@ -24,12 +24,11 @@ class General(commands.Cog):
         await ctx.send(embed=embedq('Read the latest changelog here: https://github.com/svioletg/lydian-discord-bot/blob/main/docs/changelog.md',
             f'This bot is currently running on v{VERSION}'))
 
-    @commands.command(aliases=command_aliases('ping'))
+    @commands.hybrid_command(name='ping')
     @commands.check(is_command_enabled)
     async def ping(self, ctx: commands.Context):
-        """Test command."""
+        """Check if the bot is online."""
         await ctx.send('Pong!')
-        await ctx.send(embed=embedq('PingPong!', 'PongPing!'))
 
     @commands.command(aliases=command_aliases('repository'))
     @commands.check(is_command_enabled)

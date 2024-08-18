@@ -31,6 +31,7 @@ class EmojiStr:
     play: str = '▶️'
     pause: str = '⏸️'
     skip: str = '⏭️'
+    stop: str = '⏹️'
     repeat: str = '🔁'
     repeat_one: str = '🔂'
     shuffle: str = '🔀'
