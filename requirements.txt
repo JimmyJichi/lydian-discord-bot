@@ -1,4 +1,5 @@
 aioconsole == 0.7.1
+arrow == 1.3.0
 colorama == 0.4.6
 # Branch made to support directly using escape codes instead of just predefined color names
 colorlog @ git+https://github.com/svioletg/python-colorlog@main
