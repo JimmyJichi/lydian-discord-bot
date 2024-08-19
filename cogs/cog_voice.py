@@ -829,9 +829,6 @@ class Voice(commands.Cog):
         self.audio_time_elapsed = 0.0
 
         if item != self.previous_item:
-            if self.now_playing_msg:
-                self.now_playing_msg = await self.now_playing_msg.delete()
-
             # Start the player with retrieved URL
             if item.info.source == media.SPOTIFY:
                 log.debug('Spotify source detected, matching to YouTube music if possible...')
