@@ -403,6 +403,31 @@ class Voice(commands.Cog):
         else:
             await ctx.send(embed=embedq('Nothing to skip.'))
 
+    @commands.hybrid_command(name='previous')
+    @commands.check(is_command_enabled)
+    @commands.check(author_in_vc)
+    async def previous(self, ctx: commands.Context):
+        """Go back to the previous track."""
+        previous_msg: Optional[Message] = None
+        if self.previous_item is None:
+            await ctx.send(embed=embedq('Nothing to go back to.'))
+            return
+        if self.voice_client.is_playing() or self.voice_client.is_paused():
+            if self.previous_item == self.current_item:
+                await ctx.send(embed=embedq('Nothing to go back to.'))
+                return
+            if self.previous_item == self.media_queue[0]:
+                await ctx.send(embed=embedq('Nothing to go back to.'))
+                return
+            log.info('Going back to the previous track...')
+            previous_msg = await edit_or_send(ctx, previous_msg, embed=embedq(EmojiStr.previous + ' Going back...'))
+            self.media_queue.insert(0, self.previous_item)
+            self.media_queue.insert(1, self.current_item)
+            await self.advance_queue(ctx, skipping=True)
+            previous_msg = await previous_msg.delete()
+        else:
+            await ctx.send(embed=embedq('Nothing to go back to.'))
+
     @commands.hybrid_command(name='loop')
     @commands.check(is_command_enabled)
     @commands.check(author_in_vc)

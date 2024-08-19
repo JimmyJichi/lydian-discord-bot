@@ -30,6 +30,7 @@ class EmojiStr:
     # Media
     play: str = '▶️'
     pause: str = '⏸️'
+    previous: str = '⏮️'
     skip: str = '⏭️'
     stop: str = '⏹️'
     repeat: str = '🔁'
