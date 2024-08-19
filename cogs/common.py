@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 
 # External imports
-from discord import Embed, Member, Message, NotFound, Reaction
+from discord import Embed, Member, Message, HTTPException, Reaction
 from discord.ext import commands
 
 # Local imports
@@ -70,7 +70,7 @@ async def edit_or_send(ctx: commands.Context, target: Optional[Message], **kwarg
     """
     try:
         message: Message = await target.edit(**kwargs) if target else await ctx.send(**kwargs)
-    except NotFound:
+    except HTTPException:
         message: Message = await ctx.send(**kwargs)
     return message
 
