@@ -125,9 +125,15 @@ async def prompt_for_choice(bot: commands.Bot, ctx: commands.Context,
         if result_msg:
             await result_msg.edit(embed=result_msg_embed)
             await asyncio.sleep(3)
-            await result_msg.delete()
+            try:
+                await result_msg.delete()
+            except HTTPException:
+                pass
         if delete_prompt:
-            await prompt_msg.delete()
+            try:
+                await prompt_msg.delete()
+            except HTTPException:
+                pass
 
     try:
         reaction, user = await bot.wait_for('reaction_add', timeout=timeout_seconds, check=check) # pylint: disable=unused-variable

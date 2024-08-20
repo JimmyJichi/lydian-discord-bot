@@ -417,7 +417,10 @@ class Voice(commands.Cog):
                 skip_msg = await edit_or_send(ctx, skip_msg, embed=embedq(EmojiStr.skip + ' Skipping...'))
                 self.voice_client.stop()
                 await self.advance_queue(ctx, skipping=True)
-                skip_msg = await skip_msg.delete()
+                try:
+                    skip_msg = await skip_msg.delete()
+                except HTTPException:
+                    pass
         else:
             await ctx.send(embed=embedq('Nothing to skip.'))
 
@@ -442,7 +445,10 @@ class Voice(commands.Cog):
             self.media_queue.insert(0, self.previous_item)
             self.media_queue.insert(1, self.current_item)
             await self.advance_queue(ctx, skipping=True)
-            previous_msg = await previous_msg.delete()
+            try:
+                previous_msg = await previous_msg.delete()
+            except HTTPException:
+                pass
         else:
             await ctx.send(embed=embedq('Nothing to go back to.'))
 
@@ -555,7 +561,10 @@ class Voice(commands.Cog):
                 log.info('Voice client is not playing and the queue is empty, going to try playing...')
                 starting_msg = await ctx.send(embed=embedq('Starting...'))
                 await self.advance_queue(ctx)
-                starting_msg = await starting_msg.delete()
+                try:
+                    starting_msg = await starting_msg.delete()
+                except HTTPException:
+                    pass
             else:
                 if isinstance(item, QueueItem):
                     self.queue_msg = await edit_or_send(ctx, self.queue_msg,
@@ -573,7 +582,10 @@ class Voice(commands.Cog):
         async with ctx.typing():
             log.info('Searching...')
             if self.queue_msg:
-                self.queue_msg = await self.queue_msg.delete()
+                try:
+                    self.queue_msg = await self.queue_msg.delete()
+                except HTTPException:
+                    pass
             self.queue_msg = await ctx.send(embed=embedq('Searching...'))
 
             #region play: PLAIN TEXT
@@ -765,7 +777,10 @@ class Voice(commands.Cog):
                 log.info('Voice client is not playing and the queue is empty, going to try playing...')
                 starting_msg = await ctx.send(embed=embedq('Starting...'))
                 await self.advance_queue(ctx)
-                starting_msg = await starting_msg.delete()
+                try:
+                    starting_msg = await starting_msg.delete()
+                except HTTPException:
+                    pass
             else:
                 if isinstance(item, QueueItem):
                     self.queue_msg = await edit_or_send(ctx, self.queue_msg,
@@ -783,7 +798,10 @@ class Voice(commands.Cog):
         async with ctx.typing():
             log.info('Searching...')
             if self.queue_msg:
-                self.queue_msg = await self.queue_msg.delete()
+                try:
+                    self.queue_msg = await self.queue_msg.delete()
+                except HTTPException:
+                    pass
             self.queue_msg = await ctx.send(embed=embedq('Searching...'))
 
             #region play: PLAIN TEXT
@@ -1123,7 +1141,10 @@ class Voice(commands.Cog):
             self.now_playing_msg = await ctx.send(embed=self.embed_now_playing(show_elapsed=False))
 
         if self.queue_msg:
-            self.queue_msg = await self.queue_msg.delete(delay=1.0)
+            try:
+                self.queue_msg = await self.queue_msg.delete()
+            except HTTPException:
+                pass
 
     async def handle_player_stop(self, ctx):
         """Normally just directs to `advance_queue()`, but handles some small additional logic
