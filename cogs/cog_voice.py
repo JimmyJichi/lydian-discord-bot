@@ -288,7 +288,7 @@ class Voice(commands.Cog):
                 value=f'Link: {item.info.url}{submitter_text}', inline=False)
 
         embed.description = ('**Roulette mode is ON.**\n' if self.media_queue.roulette_mode else '') + \
-            f'Showing {start + 1} to {end} of {len(self.media_queue)} items. Use -queue [page] to see more.'
+            f'Showing {start + 1} to {end} of {len(self.media_queue)} items. Use /queue [page] to see more.'
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name='history')
