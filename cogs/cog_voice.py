@@ -16,7 +16,7 @@ from typing import Callable, Optional, Self, cast
 # External imports
 import requests
 import yt_dlp
-from discord import (Activity, ActivityType, Embed, FFmpegPCMAudio, Member,
+from discord import (Activity, ActivityType, Embed, FFmpegPCMAudio, HTTPException, Member,
                      Message, PCMVolumeTransformer, User, VoiceClient,
                      VoiceState)
 from discord.ext import commands
@@ -854,6 +854,12 @@ class Voice(commands.Cog):
         self.audio_time_elapsed = 0.0
 
         if item != self.previous_item:
+            if self.now_playing_msg:
+                try:
+                    self.now_playing_msg = await self.now_playing_msg.delete()
+                except HTTPException:
+                    pass
+
             # Start the player with retrieved URL
             if item.info.source == media.SPOTIFY:
                 log.debug('Spotify source detected, matching to YouTube music if possible...')
