@@ -209,6 +209,11 @@ class Voice(commands.Cog):
                 if timeout_counter == cfg.INACTIVITY_TIMEOUT_MINS * 60:
                     log.info('Leaving voice due to inactivity...')
                     await self.voice_client.disconnect()
+                    if self.now_playing_msg:
+                        try:
+                            self.now_playing_msg = await self.now_playing_msg.delete()
+                        except HTTPException:
+                            pass
                 if not self.voice_client.is_connected():
                     log.debug('Voice doesn\'t look connected, waiting three seconds...')
                     await asyncio.sleep(3)
@@ -256,6 +261,11 @@ class Voice(commands.Cog):
             log.info('Leaving voice channel: %s', self.voice_client.channel.name)
             await self.voice_client.disconnect()
             self.voice_client = None
+            if self.now_playing_msg:
+                try:
+                    self.now_playing_msg = await self.now_playing_msg.delete()
+                except HTTPException:
+                    pass
         else:
             log.debug('No channel to leave.')
 
@@ -518,6 +528,11 @@ class Voice(commands.Cog):
             log.info('Leaving voice channel: %s', self.voice_client.channel.name)
             await self.voice_client.disconnect()
             self.voice_client = None
+            if self.now_playing_msg:
+                try:
+                    self.now_playing_msg = await self.now_playing_msg.delete()
+                except HTTPException:
+                    pass
             await ctx.send(embed=embedq(f'{EmojiStr.stop} Stopped.'))
         else:
             log.debug('No channel to leave.')
