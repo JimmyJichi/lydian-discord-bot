@@ -32,5 +32,5 @@ class BotPresence:
         return Activity(
             name=item.info.title,
             type=ActivityType.listening,
-            state=f'{len(media_queue)} items left in queue.'
+            state=f'{len(media_queue)} {'item' if len(media_queue) == 1 else 'items'} left in queue.'
             )
