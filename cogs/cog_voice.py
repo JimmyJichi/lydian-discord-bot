@@ -440,27 +440,24 @@ class Voice(commands.Cog):
     async def previous(self, ctx: commands.Context):
         """Go back to the previous track."""
         previous_msg: Optional[Message] = None
-        if self.previous_item is None:
+        if not any(item is not None for item in self.play_history):
             await ctx.send(embed=embedq('Nothing to go back to.'))
             return
         if self.voice_client.is_playing() or self.voice_client.is_paused():
-            if self.previous_item == self.current_item:
-                await ctx.send(embed=embedq('Nothing to go back to.'))
-                return
-            if self.previous_item == self.media_queue[0]:
-                await ctx.send(embed=embedq('Nothing to go back to.'))
-                return
             log.info('Going back to the previous track...')
             previous_msg = await edit_or_send(ctx, previous_msg, embed=embedq(EmojiStr.previous + ' Going back...'))
-            self.media_queue.insert(0, self.previous_item)
+            self.media_queue.insert(0, self.play_history[0])
             self.media_queue.insert(1, self.current_item)
+            self.play_history.popleft()
             await self.advance_queue(ctx, skipping=True)
+            # TODO: Fix advance_queue() to handle going back to the previous track so we don't have to popleft() twice
+            self.play_history.popleft()
             try:
                 previous_msg = await previous_msg.delete()
             except HTTPException:
                 pass
         else:
-            await ctx.send(embed=embedq('Nothing to go back to.'))
+            await ctx.send(embed=embedq('Player is not playing.'))
 
     @commands.hybrid_command(name='loop')
     @commands.check(is_command_enabled)
