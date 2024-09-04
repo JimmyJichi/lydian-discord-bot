@@ -26,7 +26,7 @@ from typing import Optional, Literal
 # Local imports
 from cogs.presence import BotPresence
 import utils.configuration as cfg
-from cogs import cog_general, cog_voice
+from cogs import cog_general, cog_voice, lastfm
 from cogs.common import EmojiStr, SilentCancel, embedq
 from utils import updating
 from utils.miscutil import create_logger
@@ -237,11 +237,14 @@ async def bot_thread():
     log.debug('Assigning bot logger to cogs...')
     cog_general.log = log
     cog_voice.log = log
+    lastfm.log = log
     async with bot:
         log.debug('Adding cog: General')
         await bot.add_cog(cog_general.General(bot))
         log.debug('Adding cog: Voice')
         await bot.add_cog(vc_ref := cog_voice.Voice(bot))
+        log.debug('Adding cog: LastFM')
+        await bot.add_cog(lastfm.LastFM(bot))
         log.info('Logging in with token, please wait for a "Ready!" message before using any commands...')
         await bot.start(token)
 

@@ -14,6 +14,11 @@
 # Path to the text file containing the bot's token
 token-file: "token.txt"
 
+# Last.fm API key and secret for scrobbling
+lastfm:
+    api-key: "API_KEY"
+    api-secret: "API_SECRET"
+
 # Should be yes/on/true almost always
 # Currently only decides which prefix to use (true = public, false = developer) 
 public: yes

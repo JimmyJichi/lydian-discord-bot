@@ -3,6 +3,7 @@
 __pycache__/
 bin/
 past-versions/
+lastfm/
 .cache
 # bot tokens
 devtoken.txt

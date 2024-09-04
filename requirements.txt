@@ -6,6 +6,7 @@ colorlog @ git+https://github.com/svioletg/python-colorlog@main
 discord.py == 2.4.0
 discord-pretty-help == 2.0.7
 fuzzywuzzy == 0.18.0
+pylast == 5.3.0
 PyNaCl == 1.5.0
 python-benedict == 0.33.2
 python-Levenshtein == 0.25.1

@@ -28,6 +28,7 @@ from cogs.common import (EmojiStr, SilentCancel, command_aliases, edit_or_send,
                          embedq, is_command_enabled, prompt_for_choice)
 from cogs.messages import CommonMsg
 from cogs.test_voice import VoiceTest
+from cogs.lastfm import LastFM
 from utils import media
 from utils.miscutil import seconds_to_hms
 
@@ -165,6 +166,7 @@ class Voice(commands.Cog):
     """Handles voice and music-related tasks."""
     def __init__(self, bot: commands.bot.Bot):
         self.bot = bot
+        self.lastfm = LastFM(self.bot)
         self.voice_client: Optional[VoiceClient] = None
         self.media_queue = MediaQueue()
         self.play_history: deque[Optional[QueueItem]] = deque([None, None, None, None, None], maxlen=5)
@@ -181,6 +183,8 @@ class Voice(commands.Cog):
         self.paused_at: float = 0.0
         self.pause_duration: float = 0.0
         self.audio_time_elapsed: float = 0.0
+
+        self.current_track_scrobbled: bool = False
 
         self.now_playing_msg: Optional[Message] = None
         self.queue_msg: Optional[Message] = None
@@ -205,6 +209,19 @@ class Voice(commands.Cog):
                 if self.voice_client.is_playing() and not self.voice_client.is_paused():
                     timeout_counter = 0
                     self.audio_time_elapsed += 1
+
+                    if not self.current_track_scrobbled:
+                        if (self.current_item.info.length_seconds > 30) and (self.audio_time_elapsed >= self.current_item.info.length_seconds // 2 or self.audio_time_elapsed >= 240):
+                            self.current_track_scrobbled = True
+                            users_in_vc = [member for member in self.voice_client.channel.members if not member.bot]
+                            for session_file in os.listdir('lastfm'):
+                                if session_file.split('.')[0] in [str(user.id) for user in users_in_vc]:
+                                    with open(f'lastfm/{session_file}', 'r') as f:
+                                        session_key = f.read()
+                                    self.lastfm.scrobble(session_key, self.current_item.info.artist, self.current_item.info.title)
+                                    log.info('Scrobbled %s - %s for %s.', self.current_item.info.artist, self.current_item.info.title, self.bot.get_user(int(session_file.split('.')[0])).name)
+                                else:
+                                    log.info('User %s is not in the voice channel. Skipping...', self.bot.get_user(int(session_file.split('.')[0])).name)
 
                 if timeout_counter == cfg.INACTIVITY_TIMEOUT_MINS * 60:
                     log.info('Leaving voice due to inactivity...')
@@ -1156,6 +1173,16 @@ class Voice(commands.Cog):
             # Don't re-send a now playing message if we're just looping this track
             await self.bot.change_presence(activity=BotPresence.playing(item, self.media_queue))
             self.now_playing_msg = await ctx.send(embed=self.embed_now_playing(show_elapsed=False))
+
+            users_in_vc = [member for member in self.voice_client.channel.members if not member.bot]
+            for session_file in os.listdir('lastfm'):
+                if session_file.split('.')[0] in [str(user.id) for user in users_in_vc]:
+                    with open(f'lastfm/{session_file}', 'r') as f:
+                        session_key = f.read()
+                    self.lastfm.now_playing(session_key, self.current_item.info.artist, self.current_item.info.title)
+                    log.info('Now playing %s - %s for %s.', self.current_item.info.artist, self.current_item.info.title, self.bot.get_user(int(session_file.split('.')[0])).name)
+                else:
+                    log.info('User %s is not in the voice channel. Skipping...', self.bot.get_user(int(session_file.split('.')[0])).name)
 
         if self.queue_msg:
             try:
