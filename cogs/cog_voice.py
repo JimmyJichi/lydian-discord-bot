@@ -530,7 +530,12 @@ class Voice(commands.Cog):
                     self.now_playing_msg = await self.now_playing_msg.delete()
                 except HTTPException:
                     pass
-            await ctx.send(embed=embedq(f'{EmojiStr.stop} Stopped.'))
+            stop_msg = await ctx.send(embed=embedq(f'{EmojiStr.stop} Stopped.'))
+            await asyncio.sleep(5)
+            try:
+                stop_msg = await stop_msg.delete()
+            except HTTPException:
+                pass
         else:
             log.debug('No channel to leave.')
             await ctx.send(embed=embedq('Nothing to stop.'))
