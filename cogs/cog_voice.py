@@ -148,7 +148,7 @@ async def author_in_vc(ctx: commands.Context) -> bool:
     command_author = cast(Member, ctx.author)
     if not command_author.voice:
         log.info('Command author not connected to voice, cancelling.')
-        await ctx.send(embed=embedq(EmojiStr.cancel + ' You must be connected to a voice channel to do this.'))
+        await ctx.send(embed=embedq(EmojiStr.cancel + ' You must be connected to a voice channel to do this.'), ephemeral=True)
         return False
 
     if ctx.voice_client:
@@ -156,7 +156,7 @@ async def author_in_vc(ctx: commands.Context) -> bool:
             return True
         else:
             await ctx.send(embed=embedq(EmojiStr.cancel + ' You must be in the same voice channel as the bot to do this.',
-                f'The bot is currently connected to "{ctx.voice_client.channel}"'))
+                f'The bot is currently connected to "{ctx.voice_client.channel}"'), ephemeral=True)
             return False
     else:
         return True
@@ -279,7 +279,7 @@ class Voice(commands.Cog):
 
         total_pages = ceil(len(self.media_queue) / 10)
         if page > total_pages:
-            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)))
+            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)), ephemeral=True)
             return
 
         queue_length_seconds = seconds_to_hms(sum(item.info.length_seconds for item in self.media_queue) +
@@ -323,16 +323,16 @@ class Voice(commands.Cog):
     async def move(self, ctx: commands.Context, origin: int, destination: int):
         """Moves the queue item located at `origin` to `destination`."""
         if self.media_queue == []:
-            await ctx.send(embed=CommonMsg.queue_is_empty())
+            await ctx.send(embed=CommonMsg.queue_is_empty(), ephemeral=True)
             return
         if (origin < 1) or (destination < 1):
-            await ctx.send(embed=embedq(EmojiStr.cancel + ' Origin or destination can\'t be less than 1.'))
+            await ctx.send(embed=embedq(EmojiStr.cancel + ' Origin or destination can\'t be less than 1.'), ephemeral=True)
             return
         if destination >= len(self.media_queue):
-            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)))
+            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)), ephemeral=True)
             return
         if origin == destination:
-            await ctx.send(embed=embedq(EmojiStr.cancel + ' Origin and destination can\'t be the same.'))
+            await ctx.send(embed=embedq(EmojiStr.cancel + ' Origin and destination can\'t be the same.'), ephemeral=True)
             return
 
         self.media_queue.insert(destination - 1, origin_item := self.media_queue.pop(origin - 1))
@@ -346,7 +346,7 @@ class Voice(commands.Cog):
     async def shuffle(self, ctx: commands.Context):
         """Shuffle the order of the queue."""
         if self.media_queue == []:
-            await ctx.send(embed=CommonMsg.queue_is_empty())
+            await ctx.send(embed=CommonMsg.queue_is_empty(), ephemeral=True)
             return
 
         random.shuffle(self.media_queue)
@@ -381,7 +381,7 @@ class Voice(commands.Cog):
     async def unqueue(self, ctx: commands.Context, n: int):
         """Remove a song from the queue at the given index."""
         if n >= len(self.media_queue):
-            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)))
+            await ctx.send(embed=CommonMsg.queue_out_of_range(len(self.media_queue)), ephemeral=True)
             return
 
         # Anyone using this command will be using the displayed numbers from -queue to figure out what index to use...
@@ -400,7 +400,7 @@ class Voice(commands.Cog):
             self.media_queue.clear()
             await ctx.send(embed=embedq(f'{EmojiStr.outbox} Queue is now empty.'))
         else:
-            await ctx.send(embed=embedq('Queue is already empty.'))
+            await ctx.send(embed=embedq('Queue is already empty.'), ephemeral=True)
 
     @commands.hybrid_command(name='skip')
     @commands.check(is_command_enabled)
@@ -432,7 +432,7 @@ class Voice(commands.Cog):
                 except HTTPException:
                     pass
         else:
-            await ctx.send(embed=embedq('Nothing to skip.'))
+            await ctx.send(embed=embedq('Nothing to skip.'), ephemeral=True)
 
     @commands.hybrid_command(name='previous')
     @commands.check(is_command_enabled)
@@ -994,7 +994,7 @@ class Voice(commands.Cog):
             else:
                 # No reason to auto-connect for something like -leave, -skip, etc.
                 await ctx.send(embed=embedq('No voice connection found.',
-                    'The bot will automatically connect to a voice channel when the `/play` command is used.'))
+                    'The bot will automatically connect to a voice channel when the `/play` command is used.'), ephemeral=True)
                 raise SilentCancel
 
     #endregion COMMANDS
